@@ -1,3 +1,4 @@
+import numpy
 class Decoder(object):
     #create object with initial prob, trans prob and emission prob
     def __init__(self, initialProb, transProb, obsProb):
@@ -15,7 +16,7 @@ class Decoder(object):
         #initialization
         viterbi = numpy.zeros((self.N, len(obs)))
         backpt = numpy.ones((self.N, len(obs)), 'int32') * -1
-        viterbi[:, 0] = np.squeeze(self.initialProb * self.Obs(obs[0]))
+        viterbi[:, 0] = numpy.squeeze(self.initialProb * self.Obs(obs[0]))
         #recursion
         for t in xrange(1, len(obs)):
             viterbi[:, t] = (viterbi[:, t-1, None].dot(self.Obs(obs[t]).T) * self.transProb).max(0)
