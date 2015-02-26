@@ -2,7 +2,9 @@
 import nltk
 from nltk.corpus import treebank
 
-full_training_set = nltk.corpus.treebank.tagged_sentences()[0:3500]
+full_training_set = nltk.corpus.treebank.tagged_sents()[0:3500]
 training_set1 = full_training_set[0:1750]
 training_set2 = full_training_set[1750:]
-test_set = nltk.corpus.treebank.tagged_sentences()[3500:]
+test_set = nltk.corpus.treebank.tagged_sents()[3500:]
+
+print full_training_set
