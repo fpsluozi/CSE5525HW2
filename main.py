@@ -48,3 +48,13 @@ set1_cpd_word_tag = nltk.ConditionalProbDist(set1_cfd_word_tag, nltk.LaplaceProb
 set1_tags = [tag for (tag, word) in set1_training_set_words]
 set1_cfd_tags = nltk.ConditionalFreqDist(nltk.bigrams(set1_tags))
 set1_cpd_tags = nltk.ConditionalProbDist(set1_cfd_tags, nltk.LaplaceProbDist)
+
+print set1_cpd_tags['NN'].prob("T")
+
+# Step 3
+
+# Step 4
+
+# Step 5
+
+# Step 6
