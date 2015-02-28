@@ -1,5 +1,6 @@
 # CSE5525 NLP Homework 2 Group 1
 import nltk
+import numpy
 import itertools
 from nltk.corpus import treebank
 
@@ -29,13 +30,13 @@ for sent in full_training_set:
 	full_training_set_words.append(('T','T'))
 
 full_cfd_word_tag = nltk.ConditionalFreqDist(full_training_set_words)
-full_cpd_word_tag = nltk.ConditionalProbDist(full_cfd_word_tag, nltk.LaplaceProbDist)
+full_cpd_word_tag = nltk.ConditionalProbDist(full_cfd_word_tag, nltk.SimpleGoodTuringProbDist)
 
 full_tags = [tag for (tag, word) in full_training_set_words]
 full_cfd_tags = nltk.ConditionalFreqDist(nltk.bigrams(full_tags))
-full_cpd_tags = nltk.ConditionalProbDist(full_cfd_tags, nltk.LaplaceProbDist)
+full_cpd_tags = nltk.ConditionalProbDist(full_cfd_tags, nltk.SimpleGoodTuringProbDist)
 
-#Traning Set 1
+# Traning Set 1
 set1_training_set_words = []
 for sent in training_set1:
 	set1_training_set_words.append(('S','S'))
@@ -43,11 +44,11 @@ for sent in training_set1:
 	set1_training_set_words.append(('T','T'))
 
 set1_cfd_word_tag = nltk.ConditionalFreqDist(set1_training_set_words)
-set1_cpd_word_tag = nltk.ConditionalProbDist(set1_cfd_word_tag, nltk.LaplaceProbDist)
+set1_cpd_word_tag = nltk.ConditionalProbDist(set1_cfd_word_tag, nltk.SimpleGoodTuringProbDist)
 
 set1_tags = [tag for (tag, word) in set1_training_set_words]
 set1_cfd_tags = nltk.ConditionalFreqDist(nltk.bigrams(set1_tags))
-set1_cpd_tags = nltk.ConditionalProbDist(set1_cfd_tags, nltk.LaplaceProbDist)
+set1_cpd_tags = nltk.ConditionalProbDist(set1_cfd_tags, nltk.SimpleGoodTuringProbDist)
 
 print set1_cpd_tags['NN'].prob("T")
 
@@ -58,8 +59,6 @@ print set1_cpd_tags['NN'].prob("T")
 # Step 5
 
 # Step 6
-
-import numpy
 
 dict_tags = {}
 dict_words = {}
@@ -88,7 +87,7 @@ for tag_1 in dict_tags.keys():
 # bi(W)
 for tag in dict_tags.keys():
     for word in dict_words.keys():
-        B_table[dict_tags[tag]][dict_words[word]] = set1_cpd_word_tags[tag].prob(word)
+        B_table[dict_tags[tag]][dict_words[word]] = set1_cpd_word_tag[tag].prob(word)
 
 # a01 - a0T 
 START_table = numpy.zeros(num_tags)
@@ -128,7 +127,7 @@ for sent in full_training_set:
     # compute P(O|lamda)
     P_O = 0
     for i in xrange(1, num_tags):
-        P_O = P_O + alpha[T][i] * END_table[i]
+        P_O = P_O + alpha_table[T][i] * END_table[i]
         
     # get beta
     beta_table = numpy.zeros((T + 1, num_tags))
@@ -138,7 +137,7 @@ for sent in full_training_set:
         beta_table[T][i] = END_table[i]
     
     # compute beta_ti
-    for t in xrange(T-1, -1, 0):
+    for t in xrange(T-1, -1, -1):
         for i in xrange(1, num_tags):
             for j in xrange(1, num_tags):
                 Ot1 = dict_words[sent[t][0]]
