@@ -1,0 +1,19 @@
+dict_tags = {}
+dict_words = {}
+num_tags = 1 # start from 1, consistent with equations in the book
+num_words = 1
+for sent in nltk.corpus.treebank.tagged_sents():
+    for word_tag in sent:
+        word = word_tag[0]
+        tag = word_tag[1]
+        if dict_words.get(word) == None:
+            dict_words[word] = num_words
+            num_words = num_words + 1
+        if dict_tags.get(tag) == None:
+            dict_tags[tag] = num_tags
+            num_tags = num_tags + 1
+
+for tag_1 in dict_tags.keys():
+    for tag_2 in dict_tags.keys():
+      # A_table[dict_tags[tag_1]][dict_tags[tag_2]] = set1_cpd_tags[tag_1].prob(tag_2)
+        print tag_1, ' ', tag_2, ' ', full_cpd_tags[tag_1].prob(tag_2)
