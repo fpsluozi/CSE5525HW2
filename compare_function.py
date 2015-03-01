@@ -30,7 +30,7 @@ when indicator== sents_match_rate, this function will return the rate sentences 
             words_count_eachsentence=len(set2[sents_pointer])
         for words_pointer in range(0,words_count_eachsentence):
              words_count=words_count+1
-             if set1[sents_pointer][words_pointer][1]==set2[sents_pointer][words_pointer][1]:
+             if set1[sents_pointer][words_pointer][1]==set2[sents_pointer][words_pointer][1]and set1[sents_pointer][words_pointer][0]==set2[sents_pointer][words_pointer][0]:
                  words_tag_match_count=words_tag_match_count+1
                  words_tag_match_count_all=words_tag_match_count_all+1
         if words_tag_match_count==len(set1[sents_pointer]):
