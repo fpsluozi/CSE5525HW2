@@ -36,8 +36,8 @@ when indicator== sents_match_rate, this function will return the rate sentences 
         if words_tag_match_count==len(set1[sents_pointer]):
              sents_tag_match_count=sents_tag_match_count+1
              words_tag_match_count=0
-    words_match_rate=words_tag_match_count_all/words_count
-    sents_match_rate=sents_tag_match_count/sents_count
+    words_match_rate=words_tag_match_count_all/float(words_count)
+    sents_match_rate=sents_tag_match_count/float(sents_count)
     if indicator=="words_match_rate":            
       return words_match_rate
     elif indicator=="sents_match_rate":
