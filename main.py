@@ -60,6 +60,9 @@ print set1_cpd_tags['NN'].prob("T")
 
 # Step 6
 
+import numpy
+
+epsilon = 0.001
 dict_tags = {}
 dict_words = {}
 num_tags = 1 # start from 1, consistent with equations in the book
@@ -74,10 +77,10 @@ for sent in nltk.corpus.treebank.tagged_sents():
         if dict_tags.get(tag) == None:
             dict_tags[tag] = num_tags
             num_tags = num_tags + 1
-
+            
 #initalize from training_set1
-A_table = numpy.zeros((num_tags, num_tags))
-B_table = numpy.zeros((num_tags, num_words))
+A_table = numpy.zeros((num_tags + 1, num_tags + 1), dtype='double')
+B_table = numpy.zeros((num_tags + 1, num_words + 1), dtype='double')
 
 # aij
 for tag_1 in dict_tags.keys():
@@ -90,99 +93,133 @@ for tag in dict_tags.keys():
         B_table[dict_tags[tag]][dict_words[word]] = set1_cpd_word_tag[tag].prob(word)
 
 # a01 - a0T 
-START_table = numpy.zeros(num_tags)
+#START_table = numpy.zeros(num_tags)
 for tag in dict_tags.keys():
-    START_table[dict_tags[tag]] = set1_cpd_tags['S'].prob(tag)
+    A_table[0][dict_tags[tag]] = set1_cpd_tags['S'].prob(tag)
 
 # a1(T+1) - aT(T+1)
-END_table = numpy.zeros(num_tags)
+#END_table = numpy.zeros(num_tags)
 for tag in dict_tags.keys():
-    END_table[dict_tags[tag]] = set1_cpd_tags['T'].prob(tag)
+    A_table[dict_tags[tag]][num_tags] = set1_cpd_tags[tag].prob('T')
 
-# b(T+1)(END) = 1
-B_end = 1.0
+# b(T+1)(END) = b(0)(START) = 1
+B_table[0][0] = 1
+B_table[num_tags][num_words] = 1
 
-# running forward-backward training
-# for every sentence in full_training_set
+converged = False
 
-for sent in full_training_set:
+while not converged:
     
-    # get alpha
-    T = len(sent)
-    alpha_table = numpy.zeros((T + 1, num_tags)) # from 1, so add 1 here for convenience
+    converged = True
     
-    # intialize alpha_1j = a_0j * bj(W1)
-    for i in xrange(1, num_tags):
-        i = dict_tags[tag]
-        j = dict_words[sent[0][0]] # Word1
-        alpha_table[1][i] = START_table[i] * B_table[i][j]
+    # running forward-backward training
+    # for every sentence in full_training_set as one iteration.
+
+    # create Xi, Gamma table
+    XI_table = numpy.zeros((num_tags, num_tags + 1), dtype='double')
+    GAMMA_table = numpy.zeros((num_tags + 1, num_words + 1), dtype='double')
     
-    # compute alpha_tj
-    for t in xrange(2, T+1):
-        for i in xrange(1, num_tags):
-            for j in xrange(1, num_tags):
-                Ot = dict_words[sent[t-1][0]]
-                alpha_table[t][i] = alpha_table[t][i] + alpha_table[t-1][j] * A_table[j][i] * B_table[i][Ot]
-    
-    # compute P(O|lamda)
-    P_O = 0
-    for i in xrange(1, num_tags):
-        P_O = P_O + alpha_table[T][i] * END_table[i]
+    for sent in full_training_set:
+
+        # get alpha
+        T = len(sent)
+        alpha_table = numpy.zeros((T + 2, num_tags + 1), dtype='double') 
+
+        # alpha_00 = 1
+        alpha_table[0][0] = 1
         
-    # get beta
-    beta_table = numpy.zeros((T + 1, num_tags))
-    
-    #initialize beta_Ti
-    for i in xrange(1, num_tags):
-        beta_table[T][i] = END_table[i]
-    
-    # compute beta_ti
-    for t in xrange(T-1, -1, -1):
+        # intialize alpha_1j = a_0j * bj(W1)
         for i in xrange(1, num_tags):
-            for j in xrange(1, num_tags):
-                Ot1 = dict_words[sent[t][0]]
-                beta_table[t][i] = beta_table[t][i] + A_table[i][j] * B_table[j][Ot1] * beta_table[t+1][j]
-    
-    # compute sum_1-(T-1) (Xi_ij), no need to take alpha_TN into account, because it will be cancelled.
-    XI_table = numpy.zeros((num_tags, num_tags))
-    for t in xrange(1, T):
-        Ot1 = dict_words[sent[t][0]]
+            i = dict_tags[tag]
+            j = dict_words[sent[0][0]] # Word1
+            alpha_table[1][i] = A_table[0][i] * B_table[i][j]
+
+        # compute alpha_tj
+        for t in xrange(2, T+1):
+            for i in xrange(1, num_tags):
+                for j in xrange(1, num_tags):
+                    Ot = dict_words[sent[t-1][0]]
+                    alpha_table[t][i] = alpha_table[t][i] + alpha_table[t-1][j] * A_table[j][i] * B_table[i][Ot]
+
+        # compute alpha_(T+1)N
         for i in xrange(1, num_tags):
-            for j in xrange(1, num_tags):
-                XI_table[i][j] = XI_table[i][j] + alpha_table[t][i] * A_table[i][j] * B_table[t][Ot1] * beta_table[t+1][j]
-    
-    # compute sum_1-(T-1) (sum_1-N (Xi_ij))
-    for i in xrange(1, num_tags):
-        for j in xrange(1, num_tags):
-            XI_table[i][0] = XI_table[i][0] + XI_table[i][j]
-    
-    # compute gamma_tj, no need to think about alpha_TN
-    GAMMA_table = numpy.zeros((T+1, num_tags))
-    for t in xrange(1, T+1):
-        for j in xrange(1, num_tags):
-            GAMMA_table[t][j] = alpha_table[t][j] * beta_table[t][j]
-    
-    # compute sum_1T(gamma_tj)
-    for j in xrange(1, num_tags):
+            alpha_table[T+1][num_tags] = alpha_table[T+1][num_tags] + alpha_table[T][i] * A_table[i][num_tags]
+                    
+        # compute P(O|lamda) = aplha_(T+1)N
+        #P_O = 0
+        #for i in xrange(1, num_tags):
+        #   P_O = P_O + alpha[T][i] * END_table[i]
+        P_O = alpha_table[T+1][num_tags]
+        print P_O
+        
+        # get beta
+        beta_table = numpy.zeros((T + 2, num_tags + 1), dtype='double')
+
+        # beta_(T+1)N = 1
+        beta_table[T+1][num_tags] = 1
+        
+        #initialize beta_Ti = aiN
+        for i in xrange(1, num_tags):
+            beta_table[T][i] = A_table[i][num_tags]
+
+        # compute beta_ti
+        for t in xrange(T-1, 0, -1):
+            for i in xrange(1, num_tags):
+                for j in xrange(1, num_tags):
+                    Ot1 = dict_words[sent[t][0]]
+                    beta_table[t][i] = beta_table[t][i] + A_table[i][j] * B_table[j][Ot1] * beta_table[t+1][j]
+                    
+        # beta_00 = P_O = alpha_(T+1)N
+        beta_table[0][0] = P_O
+
+        # compute sum_1-(T-1) (Xi_ij)
+        for t in xrange(1, T):
+            Ot1 = dict_words[sent[t][0]]
+            for i in xrange(1, num_tags):
+                for j in xrange(1, num_tags):
+                    XI_table[i][j] = XI_table[i][j] + (alpha_table[t][i] * A_table[i][j] * B_table[j][Ot1] * beta_table[t+1][j])/P_O
+
+        # compute Xi_0i
+        Ot1 = dict_words[sent[0][0]]
+        for i in xrange(1, num_tags):
+            XI_table[0][i] = XI_table[0][i] + 1 * A_table[0][i] * B_table[i][Ot1] * beta_table[1][i] / P_O
+        
+        # compute Xi_i(N)
+        for i in xrange(1, num_tags):
+            XI_table[i][num_tags] = XI_table[i][num_tags] + alpha_table[T][i] * A_table[i][num_tags] * 1 * 1 / P_O
+                    
+        # compute gamma_tj, no need to think about alpha_TN
         for t in xrange(1, T+1):
-            GAMMA_table[0][j] = GAMMA_table[0][j] + GAMMA_table[t][j]
-    
-    # compute new Aij:
-    for i in xrange(1, num_tags):
-        for j in xrange(1, num_tags):
-            A_table[i][j] = XI_table[i][j] / XI_table[i][0]
-    
-    # compute new Bj(Vk): how to deal with other words not in the sentence? 0???
-    for i in xrange(1, num_tags):
+            for j in xrange(1, num_tags):
+                Ok = dict_words[sent[t-1][0]]
+                GAMMA_table[j][Ok] =GAMMA_table[j][Ok] + alpha_table[t][j] * beta_table[t][j] / P_O
+
+    # compute sum_1w(gamma_wj)
+    for j in xrange(1, num_tags):
         for w in xrange(1, num_words):
-            B_table[i][w] = 0.0   # is this right????
-    
-    for t in xrange(1, T+1):
-        Ot = dict_words[sent[t][0]]
-        for j in xrange(1, num_tags):
-            B_table[j][Ot] = B_table[j][Ot] + GAMMA_table[t][j] / GAMMA_table[0][j]
-            
+            GAMMA_table[j][0] = GAMMA_table[j][0] + GAMMA_table[j][w]
+
+    # compute sum_1-(T-1) (sum_1-N (Xi_ij))
+    for i in xrange(0, num_tags):
+        for j in xrange(1, num_tags+1):
+            XI_table[i][0] = XI_table[i][0] + XI_table[i][j]        
+
+    # compute new Aij:
+    for i in xrange(0, num_tags):
+        for j in xrange(1, num_tags+1):
+            new_aij = XI_table[i][j] / XI_table[i][0]
+            if abs(new_aij - A_table[i][j]) > epsilon:
+                converged = False
+            A_table[i][j] = new_aij
+
+    # compute new Bi(w)
+    for w in xrange(1, num_words):
+        for i in xrange(1, num_tags):
+            new_biw = GAMMA_table[i][w] / GAMMA_table[i][0]
+            if abs(new_biw - B_table[j][w]) > epsilon:
+                converged = False
+            B_table[j][w] = new_biw
+
+    print 'ONE ITERATION'
     # test on the test set for every iteration??? (for every sentence?)
-    # invoke viterbi algorithm  
-
-
+    # invoke viterbi algorithm
