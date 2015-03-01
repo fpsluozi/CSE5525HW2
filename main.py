@@ -41,8 +41,8 @@ for tag_1 in set(full_tags): # Laplace smoothing
             full_cfd_tags[tag_1][tag_2] = 1
 for tag in set(full_tags): # Laplace smoothing
     for word in set(full_words):
-        if full_cfd_tags[tag][word] == 0:
-            full_cfd_tags[tag][word] = 1
+        if full_cfd_word_tag[tag][word] == 0:
+            full_cfd_word_tag[tag][word] = 1
             
 full_cpd_word_tag = nltk.ConditionalProbDist(full_cfd_word_tag, nltk.MLEProbDist)
 full_cpd_tags = nltk.ConditionalProbDist(full_cfd_tags, nltk.MLEProbDist)
@@ -54,19 +54,20 @@ for sent in training_set1:
     set1_training_set_words.extend([ (tag, word) for (word, tag) in sent ])
     set1_training_set_words.append(('</s>','</s>'))
 
-set1_cfd_word_tag = nltk.ConditionalFreqDist(set1_training_set_words)
-
 set1_tags = [tag for (tag, word) in set1_training_set_words]
 set1_words = [word for (tag, word) in set1_training_set_words]
+
+set1_cfd_word_tag = nltk.ConditionalFreqDist(set1_training_set_words)
 set1_cfd_tags = nltk.ConditionalFreqDist(nltk.bigrams(set1_tags))
+
 for tag_1 in set(set1_tags): # Laplace smoothing
     for tag_2 in set(set1_tags):
         if set1_cfd_tags[tag_1][tag_2] == 0:
             set1_cfd_tags[tag_1][tag_2] = 1
 for tag in set(set1_tags): # Laplace smoothing
     for word in set(set1_words):
-        if set1_cfd_tags[tag][word] == 0:
-            set1_cfd_tags[tag][word] = 1
+        if set1_cfd_word_tag[tag][word] == 0:
+            set1_cfd_word_tag[tag][word] = 1
             
 set1_cpd_word_tag = nltk.ConditionalProbDist(set1_cfd_word_tag, nltk.MLEProbDist)
 set1_cpd_tags = nltk.ConditionalProbDist(set1_cfd_tags, nltk.MLEProbDist)
