@@ -12,12 +12,12 @@ test_set = nltk.corpus.treebank.tagged_sents()[3500:]
 # Step 2: Retrieve P(W_i | T_i) and P(T_i| T_i-1)
 #
 # Sample Usage 1: 
-#	print set1_cpd_tags['DT'].prob('JJ')
-# 	meaning print the prob of adjective given determinor from training set 1
+#   print set1_cpd_tags['DT'].prob('JJ')
+#   meaning print the prob of adjective given determinor from training set 1
 #
 # Sample Usage 2: 
-#	print full_cpd_word_tag['DT'].prob('the')
-# 	meaning print the prob of word 'the' given determinor from full training set
+#   print full_cpd_word_tag['DT'].prob('the')
+#   meaning print the prob of word 'the' given determinor from full training set
 #
 # PS. cpd as the Conditional Prob Distribution
 # PSS. We use Laplace distribution for unseen cases
@@ -25,32 +25,51 @@ test_set = nltk.corpus.treebank.tagged_sents()[3500:]
 # Full Traning Set
 full_training_set_words = []
 for sent in full_training_set:
-	full_training_set_words.append(('S','S'))
-	full_training_set_words.extend([ (tag, word) for (word, tag) in sent ])
-	full_training_set_words.append(('T','T'))
-
-full_cfd_word_tag = nltk.ConditionalFreqDist(full_training_set_words)
-full_cpd_word_tag = nltk.ConditionalProbDist(full_cfd_word_tag, nltk.SimpleGoodTuringProbDist)
+    full_training_set_words.append(('<s>','<s>'))
+    full_training_set_words.extend([ (tag, word) for (word, tag) in sent ])
+    full_training_set_words.append(('</s>','</s>'))
 
 full_tags = [tag for (tag, word) in full_training_set_words]
+full_words = [word for (tag, word) in full_training_set_words]
+
+full_cfd_word_tag = nltk.ConditionalFreqDist(full_training_set_words)
 full_cfd_tags = nltk.ConditionalFreqDist(nltk.bigrams(full_tags))
-full_cpd_tags = nltk.ConditionalProbDist(full_cfd_tags, nltk.SimpleGoodTuringProbDist)
+
+for tag_1 in set(full_tags): # Laplace smoothing
+    for tag_2 in set(full_tags):
+        if full_cfd_tags[tag_1][tag_2] == 0:
+            full_cfd_tags[tag_1][tag_2] = 1
+for tag in set(full_tags): # Laplace smoothing
+    for word in set(full_words):
+        if full_cfd_tags[tag][word] == 0:
+            full_cfd_tags[tag][word] = 1
+            
+full_cpd_word_tag = nltk.ConditionalProbDist(full_cfd_word_tag, nltk.MLEProbDist)
+full_cpd_tags = nltk.ConditionalProbDist(full_cfd_tags, nltk.MLEProbDist)
 
 # Traning Set 1
 set1_training_set_words = []
 for sent in training_set1:
-	set1_training_set_words.append(('S','S'))
-	set1_training_set_words.extend([ (tag, word) for (word, tag) in sent ])
-	set1_training_set_words.append(('T','T'))
+    set1_training_set_words.append(('<s>','<s>'))
+    set1_training_set_words.extend([ (tag, word) for (word, tag) in sent ])
+    set1_training_set_words.append(('</s>','</s>'))
 
 set1_cfd_word_tag = nltk.ConditionalFreqDist(set1_training_set_words)
-set1_cpd_word_tag = nltk.ConditionalProbDist(set1_cfd_word_tag, nltk.SimpleGoodTuringProbDist)
 
 set1_tags = [tag for (tag, word) in set1_training_set_words]
+set1_words = [word for (tag, word) in set1_training_set_words]
 set1_cfd_tags = nltk.ConditionalFreqDist(nltk.bigrams(set1_tags))
-set1_cpd_tags = nltk.ConditionalProbDist(set1_cfd_tags, nltk.SimpleGoodTuringProbDist)
-
-print set1_cpd_tags['NN'].prob("T")
+for tag_1 in set(set1_tags): # Laplace smoothing
+    for tag_2 in set(set1_tags):
+        if set1_cfd_tags[tag_1][tag_2] == 0:
+            set1_cfd_tags[tag_1][tag_2] = 1
+for tag in set(set1_tags): # Laplace smoothing
+    for word in set(set1_words):
+        if set1_cfd_tags[tag][word] == 0:
+            set1_cfd_tags[tag][word] = 1
+            
+set1_cpd_word_tag = nltk.ConditionalProbDist(set1_cfd_word_tag, nltk.MLEProbDist)
+set1_cpd_tags = nltk.ConditionalProbDist(set1_cfd_tags, nltk.MLEProbDist)
 
 # Step 3
 
