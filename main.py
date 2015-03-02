@@ -4,6 +4,7 @@ import numpy
 import itertools
 from nltk.corpus import treebank
 
+
 full_training_set = nltk.corpus.treebank.tagged_sents()[0:3500]
 training_set1 = full_training_set[0:1750]
 training_set2 = full_training_set[1750:]
@@ -31,10 +32,19 @@ for sent in full_training_set:
 
 full_tags = [tag for (tag, word) in full_training_set_words]
 full_words = [word for (tag, word) in full_training_set_words]
+full_tag_set = set(full_tags)
 
 full_cfd_word_tag = nltk.ConditionalFreqDist(full_training_set_words)
 full_cfd_tags = nltk.ConditionalFreqDist(nltk.bigrams(full_tags))
 
+full_obs_set = []
+for sent in full_training_set:
+    full_obs_set.append([ word for (word, tag) in sent ])
+for i in xrange(len(full_obs_set)):
+    full_obs_set[i].append('</s>')
+    full_obs_set[i].insert(0, '<s>')
+
+"""
 for tag_1 in set(full_tags): # Laplace smoothing
     for tag_2 in set(full_tags):
         if full_cfd_tags[tag_1][tag_2] == 0:
@@ -43,6 +53,7 @@ for tag in set(full_tags): # Laplace smoothing
     for word in set(full_words):
         if full_cfd_word_tag[tag][word] == 0:
             full_cfd_word_tag[tag][word] = 1
+"""
             
 full_cpd_word_tag = nltk.ConditionalProbDist(full_cfd_word_tag, nltk.MLEProbDist)
 full_cpd_tags = nltk.ConditionalProbDist(full_cfd_tags, nltk.MLEProbDist)
@@ -60,6 +71,7 @@ set1_words = [word for (tag, word) in set1_training_set_words]
 set1_cfd_word_tag = nltk.ConditionalFreqDist(set1_training_set_words)
 set1_cfd_tags = nltk.ConditionalFreqDist(nltk.bigrams(set1_tags))
 
+"""
 for tag_1 in set(set1_tags): # Laplace smoothing
     for tag_2 in set(set1_tags):
         if set1_cfd_tags[tag_1][tag_2] == 0:
@@ -68,48 +80,74 @@ for tag in set(set1_tags): # Laplace smoothing
     for word in set(set1_words):
         if set1_cfd_word_tag[tag][word] == 0:
             set1_cfd_word_tag[tag][word] = 1
+"""
             
 set1_cpd_word_tag = nltk.ConditionalProbDist(set1_cfd_word_tag, nltk.MLEProbDist)
 set1_cpd_tags = nltk.ConditionalProbDist(set1_cfd_tags, nltk.MLEProbDist)
 
-# Step 3
+# Step 3 Viterbi
+# Since both emission prob and transition prob can be zero, we use an extremely small epsilon
+# to rule out zero probs during log calculation.
 
 def viterbi(obs, states, start_p, trans_p, emit_p):
     V = [{}]
-    path = {}
+    path = ['']
+    epsilon = 0.00000000000000000001
  
     # Initialize base cases (t == 0)
+    # Actually it will already be <s>
+
+    max_v = -1.0 / epsilon / 1000
     for y in states:
-        V[0][y] = start_p[y] * emit_p[y].prob(obs[0])
-        path[y] = [y]
+        temp_emit = emit_p[y].prob(obs[0])
+        if temp_emit < epsilon:
+            temp_emit = epsilon
+        V[0][y] = math.log(start_p[y]) + math.log(temp_emit)
+        if max_v < V[0][y]: 
+            max_v = V[0][y]          
+            path[0] = y
  
     # Run Viterbi for t > 0
     for t in range(1, len(obs)):
+         
         V.append({})
-        newpath = {}
- 
+        path.append('')
+        max_v = -1.0 / epsilon
         for y in states:
-            (prob, state) = max((V[t-1][y0] * trans_p[y0].prob(y) * emit_p[y].prob(obs[t]), y0) for y0 in states)
-            V[t][y] = prob
-            newpath[y] = path[state] + [y]
- 
-        # Don't need to remember the old paths
-        path = newpath
-    n = 0           # if only one element is observed max is sought in the initialization values
-    if len(obs) != 1:
-        n = t
-    
-    (prob, state) = max((V[n][y], y) for y in states)
-    return (prob, path[state])
+            
+            if y == "<s>":
+                V[t][y] = max_v
+            else:
+                temp = list()
+                for y0 in states: 
+                    temp_trans = trans_p[y0].prob(y)
+                    if temp_trans < epsilon:
+                        temp_trans = epsilon
+                    temp_prev_v = V[t-1][y0]
+                    if temp_prev_v < epsilon:
+                        temp_prev_v = epsilon
+                    temp.append((math.log(temp_prev_v) + math.log(temp_trans)))
 
-C_table = {}
-for tag in set(full_tags):
-    C_table[tag] = set1_cpd_tags['S'].prob(tag)
-C_table['<s>'] = 0.0016956311247603244
-C_table['</s>'] = 0
+                temp_emit = emit_p[y].prob(obs[t])
+                if temp_emit < epsilon:
+                    temp_emit = epsilon
+                prob = math.log(temp_emit) + max(temp)
+                V[t][y] = prob
+                if max_v < prob:              
+                    max_v = prob
+                    path[t] = y
+
+    # Outputting the Viterbi path    
+    return path
+
+# The init_table enforces every sentence to start with <s>
+init_table = {}
+for tag in full_tag_set:
+    init_table[tag] = 0.00000000000000000001
+init_table['<s>'] = 1.0
 
 test_obs = ['Pierre', 'Viken', ',' , '61' , "years", "old", "will", "join", "the", "board", "as", "a", "nonexecutive", "director", "Nov.", "29","."]
-print viterbi(test_obs, full_tags, C_table, full_cpd_tags, full_cpd_word_tag )
+print viterbi(test_obs, full_tags, init_table, full_cpd_tags, full_cpd_word_tag )
 
 # Step 4
 
