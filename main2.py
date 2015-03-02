@@ -104,10 +104,10 @@ for tag_1 in full_tag_set:
 B_full_table = numpy.zeros((num_tags, num_words), dtype = 'double')
 B_set1_table = numpy.zeros((num_tags, num_words), dtype = 'double')
 
-B_full_table[dict_tags['<s>']][dict_tags['<s>']] = 1.0
-B_full_table[dict_tags['</s>']][dict_tags['</s>']] = 1.0
-B_set1_table[dict_tags['<s>']][dict_tags['<s>']] = 1.0
-B_set1_table[dict_tags['</s>']][dict_tags['</s>']] = 1.0
+B_full_table[dict_tags['<s>']][dict_words['<s>']] = 1.0
+B_full_table[dict_tags['</s>']][dict_words['</s>']] = 1.0
+B_set1_table[dict_tags['<s>']][dict_words['<s>']] = 1.0
+B_set1_table[dict_tags['</s>']][dict_words['</s>']] = 1.0
 
 for tag in full_tag_set:
     if tag != '</s>' and tag != '<s>':
