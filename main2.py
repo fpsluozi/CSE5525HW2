@@ -53,15 +53,20 @@ num_words = len(full_word_set)
 dict_tags = {}
 dict_words = {}
 
-temp = 0
+dict_tags['<s>'] = 0
+dict_words['<s>'] = 0
+temp = 1
 for tag in full_tag_set:
-    dict_tags[tag] = temp
-    temp = temp + 1
-temp = 0
+    if tag != '<s>' and tag != '</s>':
+        dict_tags[tag] = temp
+        temp = temp + 1
+temp = 1
 for word in full_word_set:
-    dict_words[word] = temp
-    temp = temp + 1 
-
+    if word != '<s>' and word != '</s>':
+        dict_words[word] = temp
+        temp = temp + 1 
+dict_tags['</s>'] = num_tags - 1
+dict_words['</s>'] = num_words - 1
 
 # Traning Set 1
 set1_training_set_words = []
