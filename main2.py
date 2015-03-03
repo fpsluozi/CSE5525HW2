@@ -1,8 +1,10 @@
 # CSE5525 NLP Homework 2 Group 1
 import nltk
 import numpy
+import math
 import itertools
 from nltk.corpus import treebank
+from viterbi import viterbi
 
 full_training_set = nltk.corpus.treebank.tagged_sents()[0:3500]
 training_set1 = full_training_set[0:1750]
@@ -130,3 +132,18 @@ for tag in full_tag_set:
             B_full_table[dict_tags[tag]][dict_words[word]] = float(full_cfd_word_tag[tag][word])/float(full_num)
             B_set1_table[dict_tags[tag]][dict_words[word]] = float(set1_cfd_word_tag[tag][word])/float(set1_num)
             
+
+#step3 viterbi
+
+# The init_table is the initial probabilities and enforces every sentence to start with <s>
+init_table = {}
+for tag in full_tag_set:
+    init_table[tag] = 0.00000000000000000001
+init_table['<s>'] = 1.0
+
+# test_obs is a sentence to test viterbi
+test_obs = ['<s>', 'Pierre', 'Viken', ',' , '61' , "years", "old", "will", "join", "the", "board", "as", "a", "nonexecutive", "director", "Nov.", "29","."]
+
+#run viterbi
+print viterbi(dict_tags, dict_words, test_obs, full_tags, init_table, A_full_table, B_full_table )
+

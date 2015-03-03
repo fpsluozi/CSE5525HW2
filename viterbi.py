@@ -1,6 +1,6 @@
 import math
 
-def viterbi(obs, states, start_p, trans_p, emit_p):
+def viterbi(dict_tag, dict_word, obs, states, start_p, trans_p, emit_p):
     V = [{}]
     path = ['']
     epsilon = 0.00000000000000000001
@@ -10,7 +10,7 @@ def viterbi(obs, states, start_p, trans_p, emit_p):
 
     max_v = -1.0 / epsilon / 1000
     for y in states:
-        temp_emit = emit_p[y].prob(obs[0])
+        temp_emit = emit_p[dict_tag[y]][dict_word[obs[0]]]
         if temp_emit < epsilon:
             temp_emit = epsilon
         V[0][y] = math.log(start_p[y]) + math.log(temp_emit)
@@ -31,7 +31,7 @@ def viterbi(obs, states, start_p, trans_p, emit_p):
             else:
                 temp = list()
                 for y0 in states: 
-                    temp_trans = trans_p[y0].prob(y)
+                    temp_trans = trans_p[dict_tag[y0]][dict_tag[y]]
                     if temp_trans < epsilon:
                         temp_trans = epsilon
                     temp_prev_v = V[t-1][y0]
@@ -39,7 +39,7 @@ def viterbi(obs, states, start_p, trans_p, emit_p):
                         temp_prev_v = epsilon
                     temp.append((math.log(temp_prev_v) + math.log(temp_trans)))
 
-                temp_emit = emit_p[y].prob(obs[t])
+                temp_emit = emit_p[dict_tag[y]][dict_word[obs[t]]]
                 if temp_emit < epsilon:
                     temp_emit = epsilon
                 prob = math.log(temp_emit) + max(temp)
