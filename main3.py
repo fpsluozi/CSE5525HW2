@@ -131,8 +131,7 @@ for tag in full_tag_set:
         for word in full_word_set:
             B_full_table[dict_tags[tag]][dict_words[word]] = float(full_cfd_word_tag[tag][word])/float(full_num)
             B_set1_table[dict_tags[tag]][dict_words[word]] = float(set1_cfd_word_tag[tag][word])/float(set1_num)
-<<<<<<< HEAD
-            
+
 
 #step3 viterbi
 
@@ -147,7 +146,7 @@ test_obs = ['<s>', 'Pierre', 'Viken', ',' , '61' , "years", "old", "will", "join
 
 #run viterbi
 print viterbi(dict_tags, dict_words, test_obs, full_tags, init_table, A_full_table, B_full_table )
-=======
+
 
 
 
@@ -287,5 +286,5 @@ while not converged:
     # test on the test set for every iteration??? (for every sentence?)
     # invoke viterbi algorithm
     
->>>>>>> origin/master
+
 
