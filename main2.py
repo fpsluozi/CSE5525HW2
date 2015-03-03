@@ -129,4 +129,143 @@ for tag in full_tag_set:
         for word in full_word_set:
             B_full_table[dict_tags[tag]][dict_words[word]] = float(full_cfd_word_tag[tag][word])/float(full_num)
             B_set1_table[dict_tags[tag]][dict_words[word]] = float(set1_cfd_word_tag[tag][word])/float(set1_num)
+
+
+
+
+#step 6
+
+epsilon = 0.01
+
+converged = False
+
+while not converged:
+    
+    converged = True
+    
+    # running forward-backward training
+    # for every sentence in full_training_set as one iteration.
+
+    # create Xi, Gamma table
+    XI_table = numpy.zeros((num_tags, num_tags), dtype='double')
+    GAMMA_table = numpy.zeros((num_tags, num_words), dtype='double')
+    
+    for sent in training_set2:
+        
+        # get alpha
+        T = len(sent)
+        alpha_table = numpy.zeros((T + 2, num_tags), dtype='double') 
+
+        # alpha_00 = 1
+        alpha_table[0][0] = 1
+
+        # intialize alpha_1j = a_0j * bj(W1)
+        for i in xrange(1, num_tags - 1):
+            j = dict_words[sent[0][0]] # Word1
+            alpha_table[1][i] = A_set1_table[0][i] * B_set1_table[i][j]
+            # print A_set1_table[0][i], " ", B_set1_table[i][j]
             
+        # compute alpha_tj
+        for t in xrange(2, T+1):
+            Ot = dict_words[sent[t-1][0]]
+            for i in xrange(1, num_tags - 1):
+                for j in xrange(1, num_tags - 1):
+                    alpha_table[t][i] = alpha_table[t][i] + alpha_table[t-1][j] * A_set1_table[j][i] #* B_set1_table[i][Ot]
+                alpha_table[t][i] = alpha_table[t][i] * B_set1_table[i][Ot]
+
+        # compute alpha_(T+1)N
+        for i in xrange(1, num_tags - 1):
+            alpha_table[T+1][num_tags - 1] = alpha_table[T+1][num_tags - 1] + alpha_table[T][i] * A_set1_table[i][num_tags - 1]
+
+        # compute P(O|lamda) = aplha_(T+1)N
+        #P_O = 0
+        #for i in xrange(1, num_tags):
+        #   P_O = P_O + alpha[T][i] * END_table[i]
+        P_O = alpha_table[T+1][num_tags - 1]
+        print "P_O = ", P_O
+
+        # get beta
+        beta_table = numpy.zeros((T + 2, num_tags), dtype='double')
+
+        # beta_(T+1)N = 1
+        beta_table[T+1][num_tags - 1] = 1
+
+        #initialize beta_Ti = aiN
+        for i in xrange(1, num_tags - 1):
+            beta_table[T][i] = A_set1_table[i][num_tags - 1]
+            
+        # compute beta_ti
+        for t in xrange(T-1, 0, -1):
+            Ot1 = dict_words[sent[t][0]]
+            for i in xrange(1, num_tags - 1):
+                for j in xrange(1, num_tags - 1):
+                    beta_table[t][i] = beta_table[t][i] + A_set1_table[i][j] * beta_table[t+1][j] * B_set1_table[j][Ot1]
+                # print t, " ", i, " ", beta_table[t][i]
+            
+        # beta_00 = P_O = alpha_(T+1)N
+        beta_table[0][0] = P_O
+
+        # compute sum_1-(T-1) (Xi_ij)
+        for t in xrange(1, T):
+            Ot1 = dict_words[sent[t][0]]
+            for i in xrange(1, num_tags - 1):
+                for j in xrange(1, num_tags - 1):
+                    XI_table[i][j] = XI_table[i][j] + (alpha_table[t][i] * A_set1_table[i][j] * B_set1_table[j][Ot1] * beta_table[t+1][j])/P_O
+            
+        # compute Xi_0i
+        Ot1 = dict_words[sent[0][0]]
+        for i in xrange(1, num_tags - 1):
+            XI_table[0][i] = XI_table[0][i] + 1 * A_set1_table[0][i] * B_set1_table[i][Ot1] * beta_table[1][i] / P_O
+            # print i, " ", A_set1_table[0][i], " ", B_set1_table[i][Ot1], " ", beta_table[1][i]
+            
+        # compute Xi_i(N)
+        for i in xrange(1, num_tags - 1):
+            XI_table[i][num_tags - 1] = XI_table[i][num_tags - 1] + alpha_table[T][i] * A_set1_table[i][num_tags - 1] * 1 * 1 / P_O
+
+        # compute gamma_tj, no need to think about alpha_TN
+        for t in xrange(1, T + 1):
+            Ok = dict_words[sent[t-1][0]]
+            for j in xrange(1, num_tags - 1):
+                GAMMA_table[j][Ok] = GAMMA_table[j][Ok] + alpha_table[t][j] * beta_table[t][j] / P_O
+            #print sent[t-1][0], " ", GAMMA_table[j][Ok]
+        
+        
+    # compute sum_1w(gamma_wj)
+    for j in xrange(1, num_tags - 1):
+        for w in xrange(1, num_words - 1):
+            GAMMA_table[j][0] = GAMMA_table[j][0] + GAMMA_table[j][w]
+
+    # compute sum_1-(T-1) (sum_1-N (Xi_ij))
+    for i in xrange(0, num_tags - 1):
+        for j in xrange(1, num_tags):
+            XI_table[i][0] = XI_table[i][0] + XI_table[i][j]  
+    
+    
+    error = 0.0
+    # compute new Aij:
+    for i in xrange(0, num_tags - 1):
+        for j in xrange(1, num_tags):
+            new_aij = XI_table[i][j] / XI_table[i][0]
+            if abs(new_aij - A_set1_table[i][j]) > epsilon:
+                error = error + abs(new_aij - A_set1_table[i][j])
+            A_set1_table[i][j] = new_aij
+            
+    # compute new Bi(w)
+    # for w in xrange(1, num_words - 1):
+    for pair in sent:
+        w = dict_words[pair[0]]
+        for i in xrange(1, num_tags - 1):
+            new_biw = GAMMA_table[i][w] / GAMMA_table[i][0]
+            if abs(new_biw - B_set1_table[i][w]) > epsilon:
+                error = error + abs(new_biw - B_set1_table[i][w])
+            B_set1_table[i][w] = new_biw
+    
+    if error > epsilon:
+        converged = False
+        
+    print error
+    print 'ONE ITERATION'
+    # test on the test set for every iteration??? (for every sentence?)
+    # invoke viterbi algorithm
+    
+
