@@ -2,7 +2,7 @@
 import nltk
 import numpy
 import itertools
-from viterbi import viterbi
+
 from nltk.corpus import treebank
 
 
@@ -89,8 +89,7 @@ set1_cpd_tags = nltk.ConditionalProbDist(set1_cfd_tags, nltk.MLEProbDist)
 # Step 3 Viterbi
 # Since both emission prob and transition prob can be zero, we use an extremely small epsilon
 # to rule out zero probs during log calculation.
-
-
+from viterbi import viterbi
 
 # The init_table is the initial probabilities and enforces every sentence to start with <s>
 init_table = {}
@@ -99,9 +98,9 @@ for tag in full_tag_set:
 init_table['<s>'] = 1.0
 
 # test_obs is a sentence to test viterbi
-test_obs = ['Pierre', 'Viken', ',' , '61' , "years", "old", "will", "join", "the", "board", "as", "a", "nonexecutive", "director", "Nov.", "29","."]
+test_obs = ['<s>', 'Pierre', 'Viken', ',' , '61' , "years", "old", "will", "join", "the", "board", "as", "a", "nonexecutive", "director", "Nov.", "29",".", "</s>"]
 #run viterbi
-print viterbi(test_obs, full_tags, init_table, full_cpd_tags, full_cpd_word_tag )
+print viterbi(test_obs, full_tag_set, init_table, full_cpd_tags, full_cpd_word_tag )
 
 # Step 4
 
