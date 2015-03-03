@@ -142,10 +142,10 @@ for tag in full_tag_set:
 init_table['<s>'] = 1.0
 
 # test_obs is a sentence to test viterbi
-test_obs = ['<s>', 'Pierre', 'Viken', ',' , '61' , "years", "old", "will", "join", "the", "board", "as", "a", "nonexecutive", "director", "Nov.", "29","."]
+test_obs = ['<s>', 'Pierre', 'Vinken', ',' , '61' , "years", "old", "will", "join", "the", "board", "as", "a", "nonexecutive", "director", "Nov.", "29","."]
 
 #run viterbi
-print viterbi(dict_tags, dict_words, test_obs, full_tags, init_table, A_full_table, B_full_table )
+print viterbi(dict_tags, dict_words, test_obs, full_tag_set, init_table, A_full_table, B_full_table )
 
 
 
