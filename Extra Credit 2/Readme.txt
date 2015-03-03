@@ -1,6 +1,6 @@
 Run the python code in ipython notebook, and it will generate a data file in the folder of notebook.
 
-Put the generated data file to your default folder, and run the following two commands, then you can find the probability file in data.2gram which used backoff.
+Put the generated data file to your default folder, and run the following two SRILM commands, then you can find the probability file in data.2gram which used backoff.
 
 ngram-count -order 2 -text data -write data.2counts
 
