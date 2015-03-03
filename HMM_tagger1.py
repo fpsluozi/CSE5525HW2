@@ -122,26 +122,44 @@ for tag1 in full_tag_set:
         HMM_tagger.add_arc(num_temp + i, j, eps, eps, -math.log(A_full_table[i][j]))
 
 for tag in full_tag_set:
-    i = dict_tags[tag1]
+    i = dict_tags[tag]
     HMM_tagger.add_arc(num_temp + i, 2 * num_temp +1, eps, eps, -math.log(A_full_table[i][num_temp + 1]))
 
 HMM_tagger[num_temp*2 + 1].final = True
 
-# Select a sentence from the treebank dataset
-# and build a test fsa.
+
+###########################################################
+# test part 
+# you can run the above part first, and run the test part for many times, and change the index at each time.
+# use sents in test_set and output the sentences, right ans and my ans.
+###########################################################
 
 test = fst.Acceptor(HMM_tagger.isyms)
 num_temp = 0
-for (word, tag) in full_training_set[0]:
+
+# index of testing sentence
+index = 0
+
+right_ans = []
+
+for (word, tag) in test_set[index]:
     test.add_arc(num_temp, num_temp + 1, word)
     num_temp = num_temp + 1
+    right_ans.append(tag)
 test[num_temp].final = True
 
 test = ((test >> HMM_tagger).shortest_path())
 test.project_output()
 
+my_ans = []
+
 for state in test.states:
     for arc in state.arcs:
         if arc.ilabel != 0:
-            print HMM_tagger.osyms.find(arc.ilabel)
-    
+            my_ans.insert(0, HMM_tagger.osyms.find(arc.ilabel))
+            
+print "test sentence: ", test_set[index]
+print
+print "right tags: ", right_ans
+print
+print "my    tags: ", my_ans
