@@ -137,4 +137,11 @@ for (word, tag) in full_training_set[0]:
     num_temp = num_temp + 1
 test[num_temp].final = True
 
-test
+test = ((test >> HMM_tagger).shortest_path())
+test.project_output()
+
+for state in test.states:
+    for arc in state.arcs:
+        if arc.ilabel != 0:
+            print HMM_tagger.osyms.find(arc.ilabel)
+    
