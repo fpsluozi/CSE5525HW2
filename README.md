@@ -6,8 +6,8 @@ Last update: Mar 4, 2015
 
 # Abstract: What are in this package in a nutshell
 
-main3.py contains the probability tables, and a simple test on Viterbi algorithm. Basically it's a demo for Step 1 ~ Step 3
-Step 4 ~ Step 6 implementations are in their corresponding subfolders.
+Step 1 ~ Step 3: main3.py in the root folder contains the probability tables, and a simple test on Viterbi algorithm. Basically it's a demo for Step 1 ~ Step 3
+Step 4 ~ Step 6 :implementations are in their corresponding subfolders.
 Extra Credit folder contains both written answers and source codes for respecting extra credit questions.
 
 # Documentation Part
