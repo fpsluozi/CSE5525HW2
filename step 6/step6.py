@@ -10,17 +10,6 @@ training_set2 = full_training_set[1750:]
 test_set = nltk.corpus.treebank.tagged_sents()[3500:]
 
 # Step 2: Retrieve P(W_i | T_i) and P(T_i| T_i-1)
-#
-# Sample Usage 1: 
-#   print set1_cpd_tags['DT'].prob('JJ')
-#   meaning print the prob of adjective given determinor from training set 1
-#
-# Sample Usage 2: 
-#   print full_cpd_word_tag['DT'].prob('the')
-#   meaning print the prob of word 'the' given determinor from full training set
-#
-# PS. cpd as the Conditional Prob Distribution
-# PSS. We use Laplace distribution for unseen cases
 
 # Full Traning Set
 full_training_set_words = []
@@ -173,7 +162,7 @@ while not converged:
                 for j in xrange(1, num_tags - 1):
                     alpha_table[t][i] = alpha_table[t][i] + alpha_table[t-1][j] * A_set1_table[j][i] #* B_set1_table[i][Ot]
                 alpha_table[t][i] = alpha_table[t][i] * B_set1_table[i][Ot]
-            print t, " ", i, " ", alpha_table[t][i]
+            #print t, " ", i, " ", alpha_table[t][i]
             
         # compute alpha_(T+1)N
         for i in xrange(1, num_tags - 1):
@@ -292,7 +281,3 @@ for i in xrange(1, num_tags - 1):
         B_set1_table[i][w] = B_set1_table[i][w] / added_value
     
 # test the new prob tables 
-
-
-
-            
