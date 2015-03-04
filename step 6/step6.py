@@ -152,7 +152,7 @@ while not converged:
         
     # you can change the size of the training set.
     # for x in xrange(0, 1):
-        # sent = training_set2[x]
+    #    sent = training_set2[x]
         
         # build alpha table
         T = len(sent)
@@ -165,7 +165,6 @@ while not converged:
         for i in xrange(1, num_tags - 1):
             j = dict_words[sent[0][0]] # Word1
             alpha_table[1][i] = A_set1_table[0][i] * B_set1_table[i][j]
-            # print A_set1_table[0][i], " ", B_set1_table[i][j]
             
         # compute alpha_tj
         for t in xrange(2, T+1):
@@ -174,7 +173,8 @@ while not converged:
                 for j in xrange(1, num_tags - 1):
                     alpha_table[t][i] = alpha_table[t][i] + alpha_table[t-1][j] * A_set1_table[j][i] #* B_set1_table[i][Ot]
                 alpha_table[t][i] = alpha_table[t][i] * B_set1_table[i][Ot]
-
+            print t, " ", i, " ", alpha_table[t][i]
+            
         # compute alpha_(T+1)N
         for i in xrange(1, num_tags - 1):
             alpha_table[T+1][num_tags - 1] = alpha_table[T+1][num_tags - 1] + alpha_table[T][i] * A_set1_table[i][num_tags - 1]
@@ -183,7 +183,11 @@ while not converged:
         #P_O = 0
         #for i in xrange(1, num_tags):
         #   P_O = P_O + alpha[T][i] * END_table[i]
+        
         P_O = alpha_table[T+1][num_tags - 1]
+        if P_O == 0.0:
+            continue
+        
         print "P_O = ", P_O
 
         # get beta
@@ -230,8 +234,7 @@ while not converged:
             for j in xrange(1, num_tags - 1):
                 GAMMA_table[j][Ok] = GAMMA_table[j][Ok] + alpha_table[t][j] * beta_table[t][j] / P_O
             #print sent[t-1][0], " ", GAMMA_table[j][Ok]
-        
-        
+           
     # compute sum_1w(gamma_wj)
     for j in xrange(1, num_tags - 1):
         for w in xrange(1, num_words - 1):
@@ -289,6 +292,7 @@ for i in xrange(1, num_tags - 1):
         B_set1_table[i][w] = B_set1_table[i][w] / added_value
     
 # test the new prob tables 
+
 
 
             
