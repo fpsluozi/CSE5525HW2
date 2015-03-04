@@ -105,8 +105,6 @@ train_set1(0)
 # Since both emission prob and transition prob can be zero, we use an extremely small epsilon
 # to rule out zero probs during log calculation.
 
-
-
 # The init_table is the initial probabilities and enforces every sentence to start with <s>
 init_table = {}
 for tag in full_tag_set:
@@ -114,17 +112,10 @@ for tag in full_tag_set:
 init_table['<s>'] = 1.0
 
 # test_obs is a sentence to test viterbi
-"""test_obs = ['<s>','Pierre', 'Viken', ',' , '61' , "years", "old", "will", "join", "the", "board", "as", "a", "nonexecutive", "director", "Nov.", "29",".", '</s>']"""
-#get test word
+
+# get test word
 test_obs=get_test_word_firsttime(test_set)
-#run viterbi
-#print viterbi(test_obs[1], set(full_tags), init_table, #full_cpd_tags, full_cpd_word_tag )
-"""test_array=[]
-for i in range(0,len(test_obs)):
-    test_array.append(viterbi(test_obs[1], set(full_tags), init_table, full_cpd_tags, full_cpd_word_tag ))
-test_array.append("11111111111111")
-print test_array
-print len(test_array)"""
+
 # Step 4
 def tagging(set_,tags,word_tag):
     global full_tags
@@ -135,18 +126,7 @@ def tagging(set_,tags,word_tag):
     for i in range (0,len(set_)):
         tagset.append(viterbi(set_[i], set(full_tags), init_table, tags, word_tag))
     return combine_tag_word(set_,tagset)
-#print get_test_word_firsttime(test_set)[0]
-#print tagging(get_test_word_firsttime(test_set))
-#print test_set
-#print tagging(test_obs)
-#print get_test_word_firsttime(test_set)[0]
-#print get_head_and_tail(test_set)[5]
-#print test_set[5]
-#print len(test_set)
-#print "11111111111111111111111111111111"
-#print tagging(get_test_word_firsttime(test_set))[5]
-#print len(tagging(get_test_word_firsttime(test_set)))
-#print compare_sets(tagging(get_test_word_firsttime(test_set),full_cpd_tags, full_cpd_word_tag),get_head_and_tail(test_set),"words_match_rate")
+
 # Step 5
 def converge_test():
 	#train
@@ -162,4 +142,5 @@ def converge_test():
 	    train_fullset(1)
             temp=tagging(get_test_word(training_set2),full_cpd_tags, full_cpd_word_tag)
 	    print compare_sets(temp,training_set2,"words_match_rate")
+
 converge_test()
