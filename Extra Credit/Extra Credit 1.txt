@@ -1,0 +1,3 @@
+Some ideas for Extra credit 1 question:
+
+We are considering storing the emission probabilities of a tag given a suffix, e.g. 'NN' given suffix '-ing', into a table, and the table can be propagated through training from the tagged words in the training set, or simply use the uniform probability 1/ #tag . Once we find an unseen word out of the observation sequence, we can turn to the suffix-to-tag transition probabilities and find what the most likely tag is as we preceive the suffix of the unseen. Moreover, as a backup, if this word does not match any of the suffixes, it will be attached with a uniform emission probability.
