@@ -89,9 +89,41 @@ B_full_table:The emission probabilities
 The output will return a list which is the most likely path of states.
 E.g. ['<s>', u'CD', u'CD', u',', u'CD', u'NNS', u'JJ', u'MD', u'VB', u'DT', u'NN', u'IN', u'DT', u'JJ', u'NN', u'NNP', u'CD', u'.', '</s>']
 
-# Step4 Tagger
+# Step4 Tagger and # Step5 Convergence test
 
-# Step5 Convergence test
+run main_step45.py
+ 
+1.The first number is the rate that our results match with test_set:
+The exact rate is 0.888231603478
+2.Then, there shows an example of step 5 for 10 sentences in training_set1, 10 sentence in training_set2
+The results is the rate how training_set2 match with the itself after being tagged
+The rates I got are:
+0.817610062893
+0.783018867925
+1.0
+1.0
+1.0
+1.0
+1.0
+1.0
+1.0
+1.0
+1.0
+That shows that performance converge after 2 iterations.
+3.Finally, there shows the results of step 5 for all data
+the results shows the converge quality too. However it takes a lot of time. The results I got are:
+0.858098355323
+0.811909166684
+1.0
+1.0
+1.0
+1.0
+1.0
+1.0
+1.0
+1.0
+1.0
+It converges.
 
 # Step6 Forward-backward
 

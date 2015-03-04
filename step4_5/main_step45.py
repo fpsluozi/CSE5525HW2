@@ -17,11 +17,11 @@ test_set = nltk.corpus.treebank.tagged_sents()[3500:]
 
 # Step 2: Retrieve P(W_i | T_i) and P(T_i| T_i-1)
 #
-# Sample Usage 1: 
+# Sample Usage 1:
 #   print set1_cpd_tags['DT'].prob('JJ')
 #   meaning print the prob of adjective given determinor from training set 1
 #
-# Sample Usage 2: 
+# Sample Usage 2:
 #   print full_cpd_word_tag['DT'].prob('the')
 #   meaning print the prob of word 'the' given determinor from full training set
 #
@@ -34,10 +34,10 @@ full_words =[]
 full_tag_set=[]
 full_cpd_word_tag =[]
 full_cpd_tags = []
-full_cfd_word_tag=[] 
+full_cfd_word_tag=[]
 full_cfd_tags =[]
 set1_tags = []
-set1_words = [] 
+set1_words = []
 set1_cfd_word_tag =[]
 set1_cfd_tags = []
 set1_cpd_word_tag =[]
@@ -50,7 +50,7 @@ def train_fullset(x):
     global full_tag_set
     global full_cpd_word_tag
     global full_cpd_tags
-    global full_cfd_word_tag 
+    global full_cfd_word_tag
     global full_cfd_tags
     global full_training_set
     full_training_set_words = []
@@ -71,15 +71,15 @@ def train_fullset(x):
     if x==0:
         for i in xrange(len(full_obs_set)):
             full_obs_set[i].append('</s>')
-            full_obs_set[i].insert(0, '<s>')       
+            full_obs_set[i].insert(0, '<s>')
     full_cpd_word_tag = nltk.ConditionalProbDist(full_cfd_word_tag, nltk.MLEProbDist)
     full_cpd_tags = nltk.ConditionalProbDist(full_cfd_tags, nltk.MLEProbDist)
 
-# Traning Set1 
+# Traning Set1
 def train_set1(x):
     global training_set1
     global set1_tags
-    global set1_words 
+    global set1_words
     global set1_cfd_word_tag
     global set1_cfd_tags
     global set1_cpd_word_tag
@@ -94,7 +94,7 @@ def train_set1(x):
     set1_tags = [tag for (tag, word) in set1_training_set_words]
     set1_words = [word for (tag, word) in set1_training_set_words]
     set1_cfd_word_tag = nltk.ConditionalFreqDist(set1_training_set_words)
-    set1_cfd_tags = nltk.ConditionalFreqDist(nltk.bigrams(set1_tags))      
+    set1_cfd_tags = nltk.ConditionalFreqDist(nltk.bigrams(set1_tags))
     set1_cpd_word_tag = nltk.ConditionalProbDist(set1_cfd_word_tag, nltk.MLEProbDist)
     set1_cpd_tags = nltk.ConditionalProbDist(set1_cfd_tags, nltk.MLEProbDist)
 # train fullset and set1
@@ -126,21 +126,36 @@ def tagging(set_,tags,word_tag):
     for i in range (0,len(set_)):
         tagset.append(viterbi(set_[i], set(full_tags), init_table, tags, word_tag))
     return combine_tag_word(set_,tagset)
+print "step 4:match_rate>>"
+print compare_sets(tagging(get_test_word_firsttime(test_set),full_cpd_tags, full_cpd_word_tag),get_head_and_tail(test_set),"words_match_rate")
 
 # Step 5
+print "run an example of 10 sentences in trainset1,10 sentences in trainset2 for 11 iterations"
+def converge_test(training_set1,training_set2,full_tarining_set):
+    #train
+    train_set1(0)
+    temp=tagging(get_test_word_firsttime(training_set2),set1_cpd_tags, set1_cpd_word_tag)
+    print compare_sets(temp,get_head_and_tail(training_set2),"words_match_rate")
+    for i in range(0,10):
+        training_set2=temp
+        full_tarining_set=get_head_and_tail(training_set1)+training_set2
+        train_fullset(1)
+        temp=tagging(get_test_word(training_set2),full_cpd_tags, full_cpd_word_tag)
+        print compare_sets(temp,training_set2,"words_match_rate")
+converge_test(training_set1[0:10],training_set2[0:10],full_training_set[0:20])
 def converge_test():
 	#train
-        global training_set1
-        global training_set2
-        global full_training_set
+    global training_set1
+    global training_set2
+    global full_training_set
 	train_set1(0)
 	temp=tagging(get_test_word_firsttime(training_set2),set1_cpd_tags, set1_cpd_word_tag)
 	print compare_sets(temp,get_head_and_tail(training_set2),"words_match_rate")
 	for i in range(0,10):
-            training_set2=temp
+        training_set2=temp
 	    full_tarining_set=get_head_and_tail(training_set1)+training_set2
 	    train_fullset(1)
-            temp=tagging(get_test_word(training_set2),full_cpd_tags, full_cpd_word_tag)
+        temp=tagging(get_test_word(training_set2),full_cpd_tags, full_cpd_word_tag)
 	    print compare_sets(temp,training_set2,"words_match_rate")
-
+print "step5:(run all data for 11 iterations)"
 converge_test()
