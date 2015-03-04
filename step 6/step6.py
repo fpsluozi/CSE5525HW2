@@ -162,7 +162,11 @@ while not converged:
                 for j in xrange(1, num_tags - 1):
                     alpha_table[t][i] = alpha_table[t][i] + alpha_table[t-1][j] * A_set1_table[j][i] #* B_set1_table[i][Ot]
                 alpha_table[t][i] = alpha_table[t][i] * B_set1_table[i][Ot]
+<<<<<<< Updated upstream
             #print t, " ", i, " ", alpha_table[t][i]
+=======
+            # print t, " ", i, " ", alpha_table[t][i]
+>>>>>>> Stashed changes
             
         # compute alpha_(T+1)N
         for i in xrange(1, num_tags - 1):
