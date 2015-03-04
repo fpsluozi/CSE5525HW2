@@ -10,7 +10,7 @@ After one iteration, i.e., from the first sentence to the last sentence, we will
 
 The algorithm will converge when the sum of the changed probability (error_value) is less than 0.01 (epsilon). After convergence, we can do smoothing.
 
-At last, we can test our new probability tables by invoking the function in step 4.
+At last, we can test our new probability tables by invoking the function in step 3, 4, and 5.
 
 
 
