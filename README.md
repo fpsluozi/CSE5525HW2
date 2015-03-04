@@ -6,88 +6,94 @@ Last update: Mar 4, 2015
 
 # Abstract: What are in this package in a nutshell
 
-Step 1 ~ Step 3: main3.py in the root folder contains the probability tables, and a simple test on Viterbi algorithm. Basically it's a demo for Step 1 ~ Step 3
+Step 1 ~ Step 3: main3.py in the root folder contains the probability table propagation, and a simple test run on Viterbi algorithm. 
 Step 4 ~ Step 6 :implementations are in their corresponding subfolders.
-Extra Credit folder contains both written answers and source codes for respecting extra credit questions.
+Extra Credit folder contains both written answers and source codes for respecting extra credit questions. Readmes are also included. This documentation DOES NOT include how we answer the extra credit questions.
+
+# Usage:
+
+python main3.py
+python step4_5/main_step45.py
+python step6/step6.py
 
 # Documentation Part
 
-#step1 Training sets setup
+# Step1 - Training sets setup
 
 This is step is provided in the tutorial. 
 full_training_set = nltk.corpus.treebank.tagged_sents()[0:3500]
 which in Python returns a list of lists of (tag, word) pairs
 
-#step2 Propagating the probabilities
+# Step2 - Propagating the probabilities
 
-For demonstration purposes, we take propagating full_training_set as the example. That for training set 1 follow the identical procedure.
+This part is the foundamental for all the following steps. For demonstration purposes, we take propagating full_training_set as the example. That for training set 1 follows the identical procedure.
 
 First of all, we can acquire the set of all unique words and the set of all unique tags:
 
-full_tags = [tag for (tag, word) in full_training_set_words]
-full_words = [word for (tag, word) in full_training_set_words]    
-full_tag_set = set(full_tags)
-full_word_set = set(full_words)
+	full_tags = [tag for (tag, word) in full_training_set_words]
+	full_words = [word for (tag, word) in full_training_set_words]    
+	full_tag_set = set(full_tags)
+	full_word_set = set(full_words)
 
 Then we need to process each sentence in the training set, by adding a start tag and an end tag, and concatenate all the sentences into a single one-dimension list.
 
-for sent in full_training_set:
-    full_training_set_words.append(('<s>','<s>'))
-    full_training_set_words.extend([ (tag, word) for (word, tag) in sent ])
-    full_training_set_words.append(('</s>','</s>'))
+	for sent in full_training_set:
+	    full_training_set_words.append(('<s>','<s>'))
+	    full_training_set_words.extend([ (tag, word) for (word, tag) in sent ])
+	    full_training_set_words.append(('</s>','</s>'))
 
 Using the one-dimension list, it will be convenient to build the emission frequency distribution by using nltk.ConditionalFreqDist.
 
-full_cfd_word_tag = nltk.ConditionalFreqDist(full_training_set_words)
+	full_cfd_word_tag = nltk.ConditionalFreqDist(full_training_set_words)
 
 The transition frequency distribution can be built directly with the full tag sequence in bi-gram.
 
-full_cfd_tags = nltk.ConditionalFreqDist(nltk.bigrams(full_tags))
+	full_cfd_tags = nltk.ConditionalFreqDist(nltk.bigrams(full_tags))
 
 The transition probability of P(tag2 | tag1) will be N(tag2, tag1) / SUM(N(each tag, tag1))
 
-for tag_1 in full_tag_set:
-    if tag_1 != '</s>':
-        full_num = 0
-        for tag_2 in full_tag_set:
-            if tag_2 != '<s>' and (tag_1 != '<s>' or tag_2 != '</s>'):
-                if full_cfd_tags[tag_1][tag_2] == 0:
-                    full_cfd_tags[tag_1][tag_2] = 1
-                full_num = full_num + full_cfd_tags[tag_1][tag_2]
-        for tag_2 in full_tag_set:
-                A_full_table[dict_tags[tag_1]][dict_tags[tag_2]] = 
-float(full_cfd_tags[tag_1][tag_2])/float(full_num)
+	for tag_1 in full_tag_set:
+	    if tag_1 != '</s>':
+	        full_num = 0
+	        for tag_2 in full_tag_set:
+	            if tag_2 != '<s>' and (tag_1 != '<s>' or tag_2 != '</s>'):
+	                if full_cfd_tags[tag_1][tag_2] == 0:
+	                    full_cfd_tags[tag_1][tag_2] = 1
+	                full_num = full_num + full_cfd_tags[tag_1][tag_2]
+	        for tag_2 in full_tag_set:
+	                A_full_table[dict_tags[tag_1]][dict_tags[tag_2]] = float(full_cfd_tags[tag_1][tag_2])/float(full_num)
 
 Notice in order to avoid zero probability/log zero in future, each zero (tag, tag) frequency is replaced with 1 for smoothing purposes.
 
 Similarly the emission probability table will be propagated using the collected frequencies for each (word, tag) pair.
 
-#step3 Viterbi
+# Step3 - Viterbi
 
 The original Viterbi Algorithm requires 5 arguments which are states, observations, initial probabilities, transition probabilities and emission probabilities. In our version, we add two additional parameters which are dictionary of tags and dictionary of words since we constructed our probability table with lists and dictionary rather than the default method in nltk api(.prob) which is time-consuming.
 In our application, the observations are the words of a sentence and states are tags.
 We can apply the transition probabilities and emission probabilities as following.
 
-emit_p[dict_tag[State]][dict_word[Observation]]
-trans_p[dict_tag[Statei]][dict_tag[Statej]]
+	emit_p[dict_tag[State]][dict_word[Observation]]
+	trans_p[dict_tag[Statei]][dict_tag[Statej]]
 
 We assign the initial probabilities of <s> to 1 and the other tags for 0.00000000000000000001
-init_table: The initial probabilities
-init_table[<s>] = 1
-init_table[State] =  0.00000000000000000001
+	init_table: The initial probabilities
+	init_table[<s>] = 1
+	init_table[State] =  0.00000000000000000001
 
 A_full_table: The transmission probabilities
 B_full_table:The emission probabilities
 
-viterbi(dict_tags, dict_words, test_obs, full_tag_set, init_table, A_full_table, B_full_table )
+	viterbi(dict_tags, dict_words, test_obs, full_tag_set, init_table, A_full_table, B_full_table )
+
 The output will return a list which is the most likely path of states.
-Eg. ['<s>', u'CD', u'CD', u',', u'CD', u'NNS', u'JJ', u'MD', u'VB', u'DT', u'NN', u'IN', u'DT', u'JJ', u'NN', u'NNP', u'CD', u'.', '</s>']
+E.g. ['<s>', u'CD', u'CD', u',', u'CD', u'NNS', u'JJ', u'MD', u'VB', u'DT', u'NN', u'IN', u'DT', u'JJ', u'NN', u'NNP', u'CD', u'.', '</s>']
 
-#step4
+# Step4 Tagger
 
-#step5
+# Step5 Convergence test
 
-#step6 Forward-backward
+# Step6 Forward-backward
 
 You can run the python code on ipython notebook. The source files are located in the “step 6” folder.
 
